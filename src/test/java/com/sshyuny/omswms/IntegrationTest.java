@@ -62,4 +62,11 @@ public abstract class IntegrationTest {
                                 """.formatted(quantity)))
                 .andExpect(status().isOk());
     }
+
+    protected Long createOrder(Long productId, int quantity) throws Exception {
+        String response = postJson("/api/orders", """
+                {"customerId": 1, "lines": [{"productId": %d, "quantity": %d}]}
+                """.formatted(productId, quantity), status().isCreated());
+        return JsonPath.parse(response).read("$.id", Long.class);
+    }
 }
