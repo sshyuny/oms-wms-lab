@@ -69,4 +69,9 @@ public abstract class IntegrationTest {
                 """.formatted(productId, quantity), status().isCreated());
         return JsonPath.parse(response).read("$.id", Long.class);
     }
+
+    protected String pay(Long orderId) throws Exception {
+        String response = postJson("/api/orders/" + orderId + "/payment", "", status().isCreated());
+        return JsonPath.parse(response).read("$.pgTransactionId", String.class);
+    }
 }
