@@ -1,5 +1,6 @@
 package com.sshyuny.omswms;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -73,5 +74,14 @@ public abstract class IntegrationTest {
     protected String pay(Long orderId) throws Exception {
         String response = postJson("/api/orders/" + orderId + "/payment", "", status().isCreated());
         return JsonPath.parse(response).read("$.pgTransactionId", String.class);
+    }
+
+    protected Long shipmentIdOf(Long orderId) throws Exception {
+        String response = mockMvc.perform(get("/api/shipments").param("orderId", String.valueOf(orderId)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+        return JsonPath.parse(response).read("$.id", Long.class);
     }
 }
