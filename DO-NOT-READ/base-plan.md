@@ -3170,3 +3170,15 @@ Expected: `{"id":1,"code":"WH-01","name":"기본 물류센터","status":"ACTIVE"
 - (a) PR 방식이면 `git push -u origin base` 후 `gh pr create --base main --head base`로 PR #1 생성 → 사용자에게 **squash merge** 요청
 - 설계 문서 §8 진행 상황과 §10 체크리스트를 갱신 (base 완료, 다음은 단계 0 온보딩)
 - 사용자에게 IntelliJ에서 `DO-NOT-READ/`를 Excluded로 지정하도록 안내
+
+---
+
+## 구현 메모 (2026-10-06 실행 결과)
+
+- Task 1: Initializr `build.gradle`에 `configurations { compileOnly { extendsFrom annotationProcessor } }` 블록이 없음 → 생성본 그대로 사용 (동작 동일)
+- Task 1: main은 초기화 커밋만 두고 base 브랜치에서 전 태스크를 먼저 진행. main push는 PR 직전에 사용자가 실행
+- Task 9: `Read(/DO-NOT-READ/**)` ask 규칙만으로는 Bash `cat DO-NOT-READ/...`가 막히지 않음 (`claude -p`로 확인). `"Bash(*DO-NOT-READ*)"` ask 규칙 추가 후 Read·Bash cat·Grep 모두 거부되는 것 확인
+- Task 10: 임시 테스트로 확인한 결과
+  - 오류 경로 5종 모두 기대한 상태 코드·에러 코드
+  - 단계 1 재현: 재고 1개, 동시 주문 10건 → 10건 모두 성공, 재고 -9
+  - 단계 3 재현: 창고 SUSPENDED → 결제 409, payment 0건, 주문 PENDING_PAYMENT, PG 승인 1건 잔존
