@@ -1,7 +1,10 @@
 package com.sshyuny.omswms;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.jayway.jsonpath.JsonPath;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,5 +45,21 @@ public abstract class IntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString(StandardCharsets.UTF_8);
+    }
+
+    protected Long createProduct(String skuCode, long price) throws Exception {
+        String response = postJson("/api/products", """
+                {"skuCode": "%s", "name": "테스트 상품 %s", "price": %d}
+                """.formatted(skuCode, skuCode, price), status().isCreated());
+        return JsonPath.parse(response).read("$.id", Long.class);
+    }
+
+    protected void setStock(Long productId, int quantity) throws Exception {
+        mockMvc.perform(put("/api/stocks/{productId}", productId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"quantity": %d}
+                                """.formatted(quantity)))
+                .andExpect(status().isOk());
     }
 }
