@@ -18,6 +18,9 @@ public class ProductService {
 
     @Transactional
     public ProductResponse createProduct(ProductCreateRequest request) {
+        if (productRepository.existsBySkuCode(request.skuCode())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_SKU_CODE);
+        }
         Product product = productRepository.save(
                 new Product(request.skuCode(), request.name(), request.price()));
         stockRepository.save(new Stock(product.getId(), 0));
