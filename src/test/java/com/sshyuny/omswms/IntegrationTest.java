@@ -1,0 +1,46 @@
+package com.sshyuny.omswms;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestcontainersConfiguration.class)
+public abstract class IntegrationTest {
+
+    private static final List<String> TABLES = List.of(
+            "product", "stock", "coupon", "orders", "order_line", "payment", "shipment");
+
+    @Autowired
+    protected MockMvc mockMvc;
+
+    @Autowired
+    protected JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void cleanUpDatabase() {
+        TABLES.forEach(table -> jdbcTemplate.execute("truncate table " + table));
+        jdbcTemplate.update("update warehouse set status = 'ACTIVE'");
+    }
+
+    protected String postJson(String url, String body, ResultMatcher expectedStatus) throws Exception {
+        return mockMvc.perform(post(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(expectedStatus)
+                .andReturn()
+                .getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+    }
+}
