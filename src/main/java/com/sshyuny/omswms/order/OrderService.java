@@ -4,8 +4,12 @@ import com.sshyuny.omswms.common.BusinessException;
 import com.sshyuny.omswms.common.ErrorCode;
 import com.sshyuny.omswms.coupon.Coupon;
 import com.sshyuny.omswms.coupon.CouponRepository;
+import com.sshyuny.omswms.payment.PaymentService;
 import com.sshyuny.omswms.product.Product;
 import com.sshyuny.omswms.product.ProductRepository;
+import com.sshyuny.omswms.shipment.Shipment;
+import com.sshyuny.omswms.shipment.ShipmentRepository;
+import com.sshyuny.omswms.shipment.ShipmentStatus;
 import com.sshyuny.omswms.stock.StockService;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +28,8 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final CouponRepository couponRepository;
     private final StockService stockService;
+    private final ShipmentRepository shipmentRepository;
+    private final PaymentService paymentService;
 
     @Transactional
     public OrderResponse createOrder(OrderCreateRequest request) {
@@ -54,6 +60,30 @@ public class OrderService {
 
     public OrderResponse getOrder(Long id) {
         return OrderResponse.from(getOrderEntity(id));
+    }
+
+    @Transactional
+    public OrderResponse cancelOrder(Long id) {
+        Order order = getOrderEntity(id);
+
+        if (order.getStatus() == OrderStatus.PAID) {
+            Shipment shipment = shipmentRepository.findByOrderId(order.getId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.SHIPMENT_NOT_FOUND));
+            if (shipment.getStatus() != ShipmentStatus.READY) {
+                throw new BusinessException(ErrorCode.INVALID_SHIPMENT_STATUS);
+            }
+            shipment.setStatus(ShipmentStatus.CANCELLED);
+            paymentService.cancel(order.getId());
+        } else if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setCancelledAt(LocalDateTime.now());
+        for (OrderLine line : order.getLines()) {
+            stockService.increase(line.getProductId(), line.getQuantity());
+        }
+        return OrderResponse.from(order);
     }
 
     private long calculateCouponDiscount(String couponCode, long totalProductAmount) {
