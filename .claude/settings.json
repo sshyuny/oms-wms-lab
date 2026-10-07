@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "ask": [
+      "Read(/DO-NOT-READ/**)",
+      "Bash(*DO-NOT-READ*)"
+    ]
+  }
+}

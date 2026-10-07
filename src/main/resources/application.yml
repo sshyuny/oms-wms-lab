@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: oms-wms-lab
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+
+app:
+  default-warehouse-id: 1
