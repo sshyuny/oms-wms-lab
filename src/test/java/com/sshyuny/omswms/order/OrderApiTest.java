@@ -1,13 +1,42 @@
 package com.sshyuny.omswms.order;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.sshyuny.omswms.IntegrationTest;
+import com.sshyuny.omswms.common.ErrorCode;
+
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 
 class OrderApiTest extends IntegrationTest {
+
+    @Test
+    void 주문할때_일반적인_상황에서는_음수_재고가_발생하지_않는다() throws Exception {
+        Long productId = createProduct("SKU-001", 10_000L);
+        setStock(productId, 10);
+        createOrder(productId, 8);
+
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                        "customerId": 1,
+                                        "lines": [
+                                        {"productId":%d,
+                                        "quantity":4}
+                                        ]
+                                }
+                                """.formatted(productId)
+                        ))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(ErrorCode.OUT_OF_STOCK.name()));
+
+        mockMvc.perform(get("/api/stocks/{productId}", productId))
+               .andExpect(jsonPath("$.quantity").value(2));
+    }
 
     @Test
     void 주문하면_결제대기_상태가_되고_재고가_차감된다() throws Exception {
