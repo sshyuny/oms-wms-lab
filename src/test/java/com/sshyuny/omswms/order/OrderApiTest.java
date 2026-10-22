@@ -28,48 +28,49 @@ class OrderApiTest extends IntegrationTest {
 
         int threadCount = 100;
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch ready = new CountDownLatch(1);
-        CountDownLatch done = new CountDownLatch(threadCount);
+        boolean completed;
+        try {
+            CountDownLatch ready = new CountDownLatch(1);
+            CountDownLatch done = new CountDownLatch(threadCount);
 
-        for (int i = 0; i < threadCount; i++) {
+            for (int i = 0; i < threadCount; i++) {
                 executor.submit(() -> {
-                        try {
-                                ready.await();
-                                order(productId);
-                        } catch (Exception e) {
-                        } finally {
-                                done.countDown();
-                        }
+                    try {
+                        ready.await();
+                        order(productId);
+                    } catch (Exception e) {
+                        // 재고 부족 코드(OUT_OF_STOCK) 이외의 예외만 여기에 오지만 정확히 재고가 0인지 검증하고 있으므로 별도 처리하지 않아도 된다.
+                    } finally {
+                        done.countDown();
+                    }
                 });
+            }
+            ready.countDown();
+            completed = done.await(10, TimeUnit.SECONDS);
+        } finally {
+            executor.shutdown();
         }
-
-        ready.countDown();
-        boolean completed = done.await(10, TimeUnit.SECONDS);
-        executor.shutdown();
 
         assertThat(completed).isTrue();
         String res = mockMvc.perform(get("/api/stocks/{productId}", productId))
-               .andReturn()
-               .getResponse()
-               .getContentAsString(StandardCharsets.UTF_8);
+                .andReturn()
+                .getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
         Long quantity = JsonPath.parse(res).read("$.quantity", Long.class);
         assertThat(quantity).isEqualTo(0);
     }
 
     void order(Long productId) throws Exception {
-
         mockMvc.perform(post("/api/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                        "customerId": 1,
-                                        "lines": [
-                                        {"productId":%d,
-                                        "quantity":1}
-                                        ]
-                                }
-                                """.formatted(productId)
-                        ));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "customerId": 1,
+                          "lines": [
+                            {"productId": %d, "quantity": 1}
+                          ]
+                        }
+                        """.formatted(productId)));
     }
 
     @Test
@@ -82,19 +83,17 @@ class OrderApiTest extends IntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                        "customerId": 1,
-                                        "lines": [
-                                        {"productId":%d,
-                                        "quantity":4}
-                                        ]
+                                  "customerId": 1,
+                                  "lines": [
+                                    {"productId": %d, "quantity": 4}
+                                  ]
                                 }
-                                """.formatted(productId)
-                        ))
+                                """.formatted(productId)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value(ErrorCode.OUT_OF_STOCK.name()));
 
         mockMvc.perform(get("/api/stocks/{productId}", productId))
-               .andExpect(jsonPath("$.quantity").value(2));
+                .andExpect(jsonPath("$.quantity").value(2));
     }
 
     @Test
