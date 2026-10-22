@@ -30,7 +30,11 @@ public class StockService {
         if (stock.getQuantity() < quantity) {
             throw new BusinessException(ErrorCode.OUT_OF_STOCK);
         }
-        stockRepository.decreaseQuantity(productId, quantity);
+
+        int decreaseQuantity = stockRepository.decreaseQuantity(productId, quantity);
+        if (decreaseQuantity != 1) {
+            throw new BusinessException(ErrorCode.OUT_OF_STOCK);
+        }
     }
 
     @Transactional

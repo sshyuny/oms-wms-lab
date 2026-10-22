@@ -53,7 +53,7 @@ class OrderApiTest extends IntegrationTest {
                .getResponse()
                .getContentAsString(StandardCharsets.UTF_8);
         Long quantity = JsonPath.parse(res).read("$.quantity", Long.class);
-        assertThat(quantity).isGreaterThanOrEqualTo(0);
+        assertThat(quantity).isEqualTo(0);
     }
 
     void order(Long productId) throws Exception {

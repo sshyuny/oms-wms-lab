@@ -11,7 +11,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
     Optional<Stock> findByProductId(Long productId);
 
     @Modifying(flushAutomatically = true)
-    @Query("update Stock s set s.quantity = s.quantity - :quantity where s.productId = :productId")
+    @Query("update Stock s set s.quantity = s.quantity - :quantity where s.productId = :productId and s.quantity - :quantity >= 0")
     int decreaseQuantity(@Param("productId") Long productId, @Param("quantity") int quantity);
 
     @Modifying(flushAutomatically = true)
