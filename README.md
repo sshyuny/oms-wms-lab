@@ -58,5 +58,6 @@ Docker(OrbStack 등)가 필요하다. 테스트와 로컬 실행 모두 Testcont
 | 단계 | 티켓 | 내용 |
 |---|---|---|
 | 0 | — | 온보딩 |
+| 1 | [#2](https://github.com/sshyuny/oms-wms-lab/issues/2) | 동시 주문 시 재고가 음수로 떨어지는 문제 → 조건부 UPDATE로 차감 |
 
 (단계를 진행하며 작성)
