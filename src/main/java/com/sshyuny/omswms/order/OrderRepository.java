@@ -16,6 +16,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         where ol.productId = :productId
         and o.orderedAt < :invalidTime
         """)
-    List<Order> findByProductId(@Param("productId") Long productId, @Param("invalidTime") LocalDateTime invalidTime);
+    List<Order> findInvalidOrder(@Param("productId") Long productId, @Param("invalidTime") LocalDateTime invalidTime);
 
 }
