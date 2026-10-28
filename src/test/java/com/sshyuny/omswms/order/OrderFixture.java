@@ -10,9 +10,9 @@ public class OrderFixture {
         this.orderRepository = orderRepository;
     }
 
-    public Order persist(Long productId, LocalDateTime orderedAt) {
+    public Order persist(Long productId, Integer quantity, LocalDateTime orderedAt) {
         Order order = new Order(1L, orderedAt);
-        order.addLine(new OrderLine(productId, "테스트 상품", 10_000L, 1));
+        order.addLine(new OrderLine(productId, "테스트 상품", 10_000L,  quantity));
         order.setTotalProductAmount(10_000L);
         order.setShippingFee(3_000L);
         order.setCouponDiscountAmount(0L);
