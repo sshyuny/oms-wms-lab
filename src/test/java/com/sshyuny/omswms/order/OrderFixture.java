@@ -17,6 +17,7 @@ public class OrderFixture {
         order.setShippingFee(3_000L);
         order.setCouponDiscountAmount(0L);
         order.setPaymentAmount(13_000L);
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
 
         return orderRepository.save(order);
     }

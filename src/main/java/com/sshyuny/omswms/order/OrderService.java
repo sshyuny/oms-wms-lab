@@ -12,6 +12,8 @@ import com.sshyuny.omswms.shipment.ShipmentRepository;
 import com.sshyuny.omswms.shipment.ShipmentStatus;
 import com.sshyuny.omswms.stock.StockService;
 import java.time.LocalDateTime;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,7 @@ public class OrderService {
         for (OrderLineRequest lineRequest : request.lines()) {
             Product product = productRepository.findById(lineRequest.productId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+            cancelOldUnpaidOrderWith(product.getId());
             stockService.decrease(product.getId(), lineRequest.quantity());
             order.addLine(new OrderLine(product.getId(), product.getName(), product.getPrice(), lineRequest.quantity()));
         }
@@ -56,6 +59,16 @@ public class OrderService {
 
         orderRepository.save(order);
         return OrderResponse.from(order);
+    }
+
+    @Transactional 
+    public void cancelOldUnpaidOrderWith(Long productId) {
+        LocalDateTime invalidTime = LocalDateTime.now().minusMinutes(10);
+        List<Order> orders = orderRepository.findByProductId(productId, invalidTime);
+
+        for (Order o : orders) {
+            cancelOrder(o.getId());
+        }
     }
 
     public OrderResponse getOrder(Long id) {
