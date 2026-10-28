@@ -15,7 +15,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         join o.lines ol
         where ol.productId = :productId
         and o.orderedAt < :invalidTime
+        and o.status = :status
         """)
-    List<Order> findInvalidOrder(@Param("productId") Long productId, @Param("invalidTime") LocalDateTime invalidTime);
+    List<Order> findInvalidOrder(@Param("productId") Long productId, @Param("invalidTime") LocalDateTime invalidTime, @Param("status") OrderStatus status);
 
 }

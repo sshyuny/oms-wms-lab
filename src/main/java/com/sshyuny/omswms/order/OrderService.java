@@ -64,7 +64,7 @@ public class OrderService {
     @Transactional 
     public void cancelOldUnpaidOrderWith(Long productId) {
         LocalDateTime invalidTime = LocalDateTime.now().minusMinutes(10);
-        List<Order> orders = orderRepository.findInvalidOrder(productId, invalidTime);
+        List<Order> orders = orderRepository.findInvalidOrder(productId, invalidTime, OrderStatus.PENDING_PAYMENT);
 
         for (Order o : orders) {
             cancelOrder(o.getId());
