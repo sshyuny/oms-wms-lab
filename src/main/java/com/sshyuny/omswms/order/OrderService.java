@@ -11,6 +11,9 @@ import com.sshyuny.omswms.shipment.Shipment;
 import com.sshyuny.omswms.shipment.ShipmentRepository;
 import com.sshyuny.omswms.shipment.ShipmentStatus;
 import com.sshyuny.omswms.stock.StockService;
+
+import jakarta.persistence.EntityManager;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,6 +35,7 @@ public class OrderService {
     private final StockService stockService;
     private final ShipmentRepository shipmentRepository;
     private final PaymentService paymentService;
+    private final EntityManager em;
 
     @Transactional
     public OrderResponse createOrder(OrderCreateRequest request) {
@@ -87,12 +91,20 @@ public class OrderService {
             }
             shipment.setStatus(ShipmentStatus.CANCELLED);
             paymentService.cancel(order.getId());
+
+            order.setStatus(OrderStatus.CANCELLED);
+            order.setCancelledAt(LocalDateTime.now());
+        } else if (order.getStatus() == OrderStatus.PENDING_PAYMENT) {
+            LocalDateTime now = LocalDateTime.now();
+            int cancelled = orderRepository.cancel(OrderStatus.CANCELLED, now, order.getId(), OrderStatus.PENDING_PAYMENT);
+            em.refresh(order);
+            if (cancelled != 1) {
+                return OrderResponse.from(order);
+            }
         } else if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);
         }
 
-        order.setStatus(OrderStatus.CANCELLED);
-        order.setCancelledAt(LocalDateTime.now());
         for (OrderLine line : order.getLines()) {
             stockService.increase(line.getProductId(), line.getQuantity());
         }
