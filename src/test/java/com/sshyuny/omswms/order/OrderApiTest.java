@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,10 +17,45 @@ import com.jayway.jsonpath.JsonPath;
 import com.sshyuny.omswms.IntegrationTest;
 import com.sshyuny.omswms.common.ErrorCode;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
 class OrderApiTest extends IntegrationTest {
+
+    @Autowired 
+    OrderRepository orderRepository;
+
+    private OrderFixture orderFixture;
+
+    @BeforeEach 
+    void setUp() {
+        orderFixture = new OrderFixture(orderRepository);
+    }
+
+    @Test 
+    void 결제되지_않은_오래된_주문의_재고는_사용할수있다() throws Exception {
+        Long productId = createProduct("SKU-001", 10_000L);
+        
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime before = now.minusHours(1);
+        
+        orderFixture.persist(productId, 10, before);
+        setStock(productId, 0);
+
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "customerId": 1,
+                                  "lines": [
+                                    {"productId": %d, "quantity": 1}
+                                  ]
+                                }
+                                """.formatted(productId)))
+                .andExpect(status().isCreated());
+    }
 
     @Test
     void 동시에_주문이_몰릴때_재고가_음수가_되지_않는다() throws Exception {
