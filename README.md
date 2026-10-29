@@ -65,5 +65,6 @@ Docker(OrbStack 등)가 필요하다. 테스트와 로컬 실행 모두 Testcont
 |---|---|---|
 | 0 | — | 온보딩 |
 | 1 | [#2](https://github.com/sshyuny/oms-wms-lab/issues/2) | 동시 주문 시 재고가 음수로 떨어지는 문제 → 조건부 UPDATE로 차감 |
+| 2 | [#4](https://github.com/sshyuny/oms-wms-lab/issues/4) | 미결제 주문에 묶인 재고로 신규 주문이 막히는 문제 → 신규 주문 시 10분 초과 미결제 주문 취소와 재고 복구 |
 
 (단계를 진행하며 작성)
