@@ -47,9 +47,10 @@
 
 ### merge 후 정리
 - squash merge는 사용자가 GitHub에서 한다.
-- squash 후에는 로컬 `main`이 `origin/main`과 갈라진다. `git reset --hard origin/main`은 사용자가 직접 실행한다. AI는 squash 커밋과 작업 브랜치의 파일 내용이 같은지만 확인한다.
+- AI는 squash 커밋과 작업 브랜치의 파일 내용이 같은지 확인하고, 로컬 `main`을 fast-forward로 갱신한다. 불가능하면 상태를 보고한다.
+- `git reset --hard`는 사용자가 직접 실행한다.
 - 작업 브랜치는 로컬에서만 삭제하고 원격 브랜치는 남긴다.
-- `DO-NOT-READ/stage-N.md`의 "실제 해결 기록"이나 README 같은 문서 변경은 사용자가 요청하면 `main`에 바로 커밋하고 push한다.
+- 실제 해결 기록이나 README 같은 문서 변경은 사용자가 요청하면 `main`에 바로 커밋하고 push한다.
 
 ## 기타
 
