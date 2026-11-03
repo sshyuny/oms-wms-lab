@@ -8,9 +8,12 @@ import com.sshyuny.omswms.order.OrderStatus;
 import com.sshyuny.omswms.shipment.ShipmentService;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -36,7 +39,12 @@ public class PaymentService {
 
         order.setStatus(OrderStatus.PAID);
         order.setPaidAt(now);
-        shipmentService.createShipment(order.getId());
+
+        try {
+            shipmentService.createShipment(order.getId());
+        } catch (BusinessException e) {
+            log.error("결제 시도중 출고 문제 발생: OrderId = {}", orderId);
+        }
 
         return PaymentResponse.from(payment);
     }
