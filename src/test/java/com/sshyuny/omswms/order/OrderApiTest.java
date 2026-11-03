@@ -41,7 +41,7 @@ class OrderApiTest extends IntegrationTest {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime before = now.minusHours(1);
         
-        orderFixture.persist(productId, 10, before);
+        orderFixture.persist(productId, 10, OrderStatus.PENDING_PAYMENT, before);
         setStock(productId, 0);
 
         mockMvc.perform(post("/api/orders")
