@@ -30,4 +30,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         """)
     int cancel(@Param("status")OrderStatus status, @Param("cancelledTime") LocalDateTime cancelledTime, @Param("id") Long id, @Param("beforeStatus") OrderStatus beforeStatus);
 
+    @Query("""
+        select distinct o
+        from Order o
+        left join Shipment s on o.id = s.orderId
+        where o.status = "PAID"
+        and s.id is null
+        """)
+    List<Order> findNoShipmentOrders();
+
 }

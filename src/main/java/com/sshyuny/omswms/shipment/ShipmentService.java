@@ -9,6 +9,9 @@ import com.sshyuny.omswms.warehouse.Warehouse;
 import com.sshyuny.omswms.warehouse.WarehouseRepository;
 import com.sshyuny.omswms.warehouse.WarehouseStatus;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,19 @@ public class ShipmentService {
             throw new BusinessException(ErrorCode.WAREHOUSE_SUSPENDED);
         }
         shipmentRepository.save(new Shipment(orderId, warehouse.getId()));
+    }
+
+    @Transactional 
+    public List<Long> createForPaidOrder() {
+        List<Long> orderIds = new ArrayList<>();
+
+        List<Order> noShipmentOrders = orderRepository.findNoShipmentOrders();
+        for (Order order : noShipmentOrders) {
+            createShipment(order.getId());
+            orderIds.add(order.getId());
+        }
+
+        return orderIds;
     }
 
     public ShipmentResponse getShipment(Long id) {
