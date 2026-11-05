@@ -1,18 +1,13 @@
 package com.sshyuny.omswms.payment;
 
-import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sshyuny.omswms.IntegrationTest;
-import com.sshyuny.omswms.common.BusinessException;
-import com.sshyuny.omswms.common.ErrorCode;
-import com.sshyuny.omswms.shipment.ShipmentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
@@ -21,18 +16,13 @@ class PaymentShipmentFailureApiTest extends IntegrationTest {
     @Autowired
     private FakePgClient fakePgClient;
 
-    @MockitoBean
-    private ShipmentService shipmentService;
-
     @Test 
     void 출고지시가_실패해도_결제는_성공한다() throws Exception {
         Long productId = createProduct("SKU-001", 10_000L);
         setStock(productId, 10);
         Long orderId = createOrder(productId, 2);
 
-        willThrow(new BusinessException(ErrorCode.WAREHOUSE_SUSPENDED))
-            .given(shipmentService)
-            .createShipment(orderId);
+        jdbcTemplate.update("update warehouse set status = 'SUSPENDED'");
 
         String response = postJson("/api/orders/" + orderId + "/payment", "", status().isCreated());
 
