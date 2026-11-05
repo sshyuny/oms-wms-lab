@@ -42,8 +42,8 @@ public class PaymentService {
 
         try {
             shipmentService.createShipment(order.getId());
-        } catch (BusinessException e) {
-            log.error("결제 시도중 출고 문제 발생: OrderId = {}", orderId);
+        } catch (Exception e) {
+            log.error("결제 시도중 출고 문제 발생: OrderId = {}", orderId, e);
         }
 
         return PaymentResponse.from(payment);
