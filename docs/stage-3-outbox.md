@@ -7,9 +7,9 @@
 
 ## 현재 진행 위치
 
-- 1단계 처리 흐름과 범위 합의 완료
-- 다음 작업: **2. 아웃박스 테이블 구조 짜기**
-- 테이블 구조, 전달 방식, 재시도 정책 등 세부 설계는 아직 미결정
+- 1단계 완료, 2단계 기본 스키마 구현 완료
+- 다음 작업: **3. 결제 시 아웃박스에 기록하도록 변경하기**
+- 전달 방식과 재시도 정책은 아직 미결정
 
 ## 1. 처리 흐름과 범위 정하기
 
@@ -26,13 +26,32 @@
 
 ## 2. 아웃박스 테이블 구조 짜기
 
-- [ ] 이벤트 식별자, 내용, 처리 상태, 생성 시각 등 필요한 항목을 정한다.
-- [ ] 실패·재시도에 필요한 정보를 정한다.
-- [ ] 결정한 구조를 스키마와 코드에 반영한다.
+- [x] 이벤트 식별자, 내용, 처리 상태, 생성 시각 등 필요한 항목을 정한다.
+- [ ] 실패·재시도에 필요한 정보를 정한다。（5단계에서 검토）
+- [x] 결정한 구조를 스키마와 코드에 반영한다.
 
 결정한 내용:
 
-- 아직 없음
+- 여러 종류의 이벤트를 담을 수 있는 공용 `outbox_event` 테이블을 사용한다.
+- `id`를 메시지 고유 ID로 사용하며, 재시도 시에도 같은 ID를 전달한다.
+- 이번 이벤트는 `event_type = SHIPMENT_CREATION_REQUESTED`, `payload = {"orderId": 123}` 형태로 담는다.
+- 상태는 처리 대기 `PENDING`과 처리 완료 `PROCESSED`로 시작한다. 실패한 이벤트는 `PENDING`으로 남겨 재시도한다.
+- 재시도 횟수·실패 이유·다음 시도 시각 등 추가 컬럼은 5단계에서 정책과 함께 검토한다.
+- 마이그레이션·엔티티·리포지토리 작성 완료. `./gradlew test`로 MySQL에서 V1 → V2 적용 성공과 기존 테스트 16개 통과를 확인했다. 아웃박스 엔티티의 저장·조회는 아직 검증하지 않았다.
+
+합의한 기본 스키마:
+
+```sql
+CREATE TABLE outbox_event (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    event_type   VARCHAR(100) NOT NULL,
+    payload      JSON NOT NULL,
+    status       VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    created_at   DATETIME(6) NOT NULL,
+    processed_at DATETIME(6) NULL,
+    INDEX idx_outbox_event_status_id (status, id)
+);
+```
 
 ## 3. 결제 시 아웃박스에 기록하도록 변경하기
 
