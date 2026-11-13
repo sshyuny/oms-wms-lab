@@ -2,6 +2,6 @@ package com.sshyuny.omswms.common;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> {
+public interface OutboxEventJpaRepository extends JpaRepository<OutboxEvent, Long> {
 
 }
