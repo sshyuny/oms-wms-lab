@@ -8,7 +8,7 @@ import com.sshyuny.omswms.payment.PaymentService;
 import com.sshyuny.omswms.product.Product;
 import com.sshyuny.omswms.product.ProductRepository;
 import com.sshyuny.omswms.shipment.Shipment;
-import com.sshyuny.omswms.shipment.ShipmentRepository;
+import com.sshyuny.omswms.shipment.ShipmentJpaRepository;
 import com.sshyuny.omswms.shipment.ShipmentStatus;
 import com.sshyuny.omswms.stock.StockService;
 
@@ -33,7 +33,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final CouponRepository couponRepository;
     private final StockService stockService;
-    private final ShipmentRepository shipmentRepository;
+    private final ShipmentJpaRepository shipmentJpaRepository;
     private final PaymentService paymentService;
     private final EntityManager em;
 
@@ -84,7 +84,7 @@ public class OrderService {
         Order order = getOrderEntity(id);
 
         if (order.getStatus() == OrderStatus.PAID) {
-            Shipment shipment = shipmentRepository.findByOrderId(order.getId())
+            Shipment shipment = shipmentJpaRepository.findByOrderId(order.getId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.SHIPMENT_NOT_FOUND));
             if (shipment.getStatus() != ShipmentStatus.READY) {
                 throw new BusinessException(ErrorCode.INVALID_SHIPMENT_STATUS);

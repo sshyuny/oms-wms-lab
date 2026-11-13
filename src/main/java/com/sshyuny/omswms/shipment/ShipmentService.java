@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ShipmentService {
 
-    private final ShipmentRepository shipmentRepository;
+    private final ShipmentJpaRepository shipmentJpaRepository;
     private final WarehouseRepository warehouseRepository;
     private final OrderRepository orderRepository;
 
@@ -33,7 +33,7 @@ public class ShipmentService {
         if (warehouse.getStatus() == WarehouseStatus.SUSPENDED) {
             throw new BusinessException(ErrorCode.WAREHOUSE_SUSPENDED);
         }
-        shipmentRepository.save(new Shipment(orderId, warehouse.getId()));
+        shipmentJpaRepository.save(new Shipment(orderId, warehouse.getId()));
     }
 
     public ShipmentResponse getShipment(Long id) {
@@ -41,7 +41,7 @@ public class ShipmentService {
     }
 
     public ShipmentResponse getShipmentByOrderId(Long orderId) {
-        Shipment shipment = shipmentRepository.findByOrderId(orderId)
+        Shipment shipment = shipmentJpaRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SHIPMENT_NOT_FOUND));
         return ShipmentResponse.from(shipment);
     }
@@ -81,7 +81,7 @@ public class ShipmentService {
     }
 
     private Shipment getShipmentEntity(Long id) {
-        return shipmentRepository.findById(id)
+        return shipmentJpaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SHIPMENT_NOT_FOUND));
     }
 }
