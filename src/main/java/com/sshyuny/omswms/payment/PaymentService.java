@@ -5,7 +5,7 @@ import com.sshyuny.omswms.common.ErrorCode;
 import com.sshyuny.omswms.order.Order;
 import com.sshyuny.omswms.order.OrderRepository;
 import com.sshyuny.omswms.order.OrderStatus;
-import com.sshyuny.omswms.shipment.ShipmentService;
+import com.sshyuny.omswms.shipment.ShipmentEventRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-    private final ShipmentService shipmentService;
+    private final ShipmentEventRepository shipmentEventRepository;
     private final FakePgClient fakePgClient;
 
     @Transactional
@@ -36,7 +36,7 @@ public class PaymentService {
 
         order.setStatus(OrderStatus.PAID);
         order.setPaidAt(now);
-        shipmentService.createShipment(order.getId());
+        shipmentEventRepository.publishShipmentCreation(orderId);
 
         return PaymentResponse.from(payment);
     }
